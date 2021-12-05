@@ -14,10 +14,7 @@ class ShelvePersistence(object):
     def load(self, key):
         try:
             shelve_file = shelve.open(settings.config['db_dir'] + "/Positions")
-            if key in shelve_file:
-                result = shelve_file[key]
-            else:
-                result = None
+            result = shelve_file[key] if key in shelve_file else None
         finally:
             shelve_file.close()
         return result
@@ -36,18 +33,15 @@ class ShelvePersistence(object):
 
         if old_data is None:
             shelve_file[stock] = {'code_name': code_name, 'positions': [new_position], 'cost': new_cost}
-            shelve_file.close()
-            return True
         else:
             positions = old_data['positions']
-            if len(positions) < 4:
-                positions.append(new_position)
-                cost = old_data['cost'] + new_cost
-                shelve_file[stock] = {'code_name': code_name, 'positions': positions, 'cost': cost}
-                shelve_file.close()
-                return True
-            else:
+            if len(positions) >= 4:
                 return False
+            positions.append(new_position)
+            cost = old_data['cost'] + new_cost
+            shelve_file[stock] = {'code_name': code_name, 'positions': positions, 'cost': cost}
+        shelve_file.close()
+        return True
 
     def positions(self):
         shelve_file = shelve.open(settings.config['db_dir'] + "/Positions")

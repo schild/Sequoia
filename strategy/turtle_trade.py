@@ -30,10 +30,7 @@ def check_enter(code_name, data, end_date=None, threshold=60):
 
     last_close = data.iloc[-1]['close']
 
-    if last_close >= max_price:
-        return True
-
-    return False
+    return last_close >= max_price
 
 
 # 最后一个交易日收市价为指定区间内最低价
@@ -54,10 +51,7 @@ def check_exit(code_name, data, end_date=None, threshold=10):
 
     last_close = data.iloc[-1]['close']
 
-    if last_close <= min_price:
-        return True
-
-    return False
+    return last_close <= min_price
 
 
 # 止损 todo 亏损达到账户总额的2%
@@ -67,13 +61,12 @@ def check_stop(code_name, data, position_data, end_date=None):
     last_close = data.iloc[-1]['close']
     positions = position_data['positions']
     cost = position_data['cost']
-    current_cap = 0
-    for (position_price, position_size) in positions:
-        current_cap += position_size * last_close * 100
+    current_cap = sum(
+        position_size * last_close * 100
+        for (position_price, position_size) in positions
+    )
 
-    if cost - BALANCE / 50 > current_cap:
-        return True
-    return False
+    return cost - BALANCE / 50 > current_cap
 
 
 # 绝对波动幅度
@@ -83,10 +76,9 @@ def real_atr(n, amount):
 
 def calculate(code_name, data, end_date=None, threshold=20):
     begin_date = data.iloc[0].date
-    if end_date is not None:
-        if end_date < begin_date:  # 该股票在end_date时还未上市
-            logging.debug("{}在{}时还未上市".format(code_name, end_date))
-            return False
+    if end_date is not None and end_date < begin_date:  # 该股票在end_date时还未上市
+        logging.debug("{}在{}时还未上市".format(code_name, end_date))
+        return False
 
     if end_date is not None:
         mask = (data['date'] <= end_date)
@@ -104,8 +96,7 @@ def calculate(code_name, data, end_date=None, threshold=20):
     t_shelve = db.ShelvePersistence()
     t_shelve.save(code_name, last_close, position_size)
 
- # last_close, position_size, atr
-    result = (
+    return (
         "N：{0}\n"
         "头寸规模：{1}手\n"
         "买入价格：{2:0.2f}，{3:0.2f}，{4:0.2f}，{5:0.2f}\n"
@@ -116,5 +107,4 @@ def calculate(code_name, data, end_date=None, threshold=20):
                     last_close + atr * 2,
                     last_close + atr * 3,
                     last_close - atr * 2))
-    return result
 

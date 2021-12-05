@@ -7,7 +7,7 @@ import pandas as pd
 import os
 import settings
 
-ONE_HOUR_SECONDS = 60 * 60
+ONE_HOUR_SECONDS = 60**2
 
 
 # 获取股票代码列表
@@ -57,14 +57,12 @@ def need_update_data():
     try:
         code_name = ('000001', '平安银行')
         data = read_data(code_name)
-        if data is None:
-            return True
-        else:
+        if data is not None:
             start_time = next_weekday(data.iloc[-1].date)
             current_time = datetime.datetime.now()
             if start_time > current_time:
                 return False
-            return True
+        return True
     except IOError:
         return True
 

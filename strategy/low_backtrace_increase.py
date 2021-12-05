@@ -19,16 +19,14 @@ def check(code_name, data, end_date=None, threshold=60):
 
     # 允许有一次“洗盘”
     flag = True
-    for i in range(1, len(data)):
-        # 单日跌幅超7%；高开低走7%；两日累计跌幅10%；两日高开低走累计10%
-        if data.iloc[i - 1]['p_change'] < -7 \
-                or (data.iloc[i]['close'] - data.iloc[i]['open'])/data.iloc[i]['open'] * 100 < -7 \
-                or data.iloc[i - 1]['p_change'] + data.iloc[i]['p_change'] < -10 \
-                or (data.iloc[i]['close'] - data.iloc[i - 1]['open']) / data.iloc[i - 1]['open'] * 100 < -10:
-            return False
-            # if flag:
-            #     flag = False
-            # else:
-            #     return False
-
-    return True
+    return not any(
+        data.iloc[i - 1]['p_change'] < -7
+        or (data.iloc[i]['close'] - data.iloc[i]['open'])
+        / data.iloc[i]['open']
+        < -7 / 100
+        or data.iloc[i - 1]['p_change'] + data.iloc[i]['p_change'] < -10
+        or (data.iloc[i]['close'] - data.iloc[i - 1]['open'])
+        / data.iloc[i - 1]['open']
+        < -10 / 100
+        for i in range(1, len(data))
+    )
