@@ -43,9 +43,9 @@ def check_low_increase(code_name, data, end_date=None, ma_short=30, ma_long=250,
             #     return False
 
             if p_change > 0:
-                inc_days = inc_days + 1
+                inc_days += 1
             if p_change < 0:
-                dec_days = dec_days + 1
+                dec_days += 1
 
             if row['close'] > highest_row['close']:
                 highest_row = row

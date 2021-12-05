@@ -11,10 +11,9 @@ def check(code_name, data, end_date=None, threshold=15):
     origin_data = data
 
     begin_date = data.iloc[0].date
-    if end_date is not None:
-        if end_date < begin_date:  # 该股票在end_date时还未上市
-            logging.debug("{}在{}时还未上市".format(code_name, end_date))
-            return False
+    if end_date is not None and end_date < begin_date:  # 该股票在end_date时还未上市
+        logging.debug("{}在{}时还未上市".format(code_name, end_date))
+        return False
 
     if end_date is not None:
         mask = (data['date'] <= end_date)
@@ -31,10 +30,14 @@ def check(code_name, data, end_date=None, threshold=15):
     # 找出涨停日
     for index, row in data.iterrows():
         try:
-            if float(row['p_change']) > 9.5:
-                if turtle_trade.check_enter(code_name, origin_data, row['date'], threshold):
-                    if check_internal(code_name, data, row):
-                        flag = True
+            if (
+                float(row['p_change']) > 9.5
+                and turtle_trade.check_enter(
+                    code_name, origin_data, row['date'], threshold
+                )
+                and check_internal(code_name, data, row)
+            ):
+                flag = True
         except KeyError as error:
             logging.debug("{}处理异常：{}".format(code_name, error))
 

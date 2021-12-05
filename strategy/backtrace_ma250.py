@@ -21,10 +21,9 @@ def check(code_name, data, end_date=None, threshold=60):
     data['ma250'] = pd.Series(tl.MA(data['close'].values, 250), index=data.index.values)
 
     begin_date = data.iloc[0].date
-    if end_date is not None:
-        if end_date < begin_date:  # 该股票在end_date时还未上市
-            logging.debug("{}在{}时还未上市".format(code_name, end_date))
-            return False
+    if end_date is not None and end_date < begin_date:  # 该股票在end_date时还未上市
+        logging.debug("{}在{}时还未上市".format(code_name, end_date))
+        return False
 
     if end_date is not None:
         mask = (data['date'] <= end_date)
@@ -58,8 +57,10 @@ def check(code_name, data, end_date=None, threshold=60):
     if data_front.empty:
         return False
     # 前半段由年线以下向上突破
-    if not (data_front.iloc[0]['close'] < data_front.iloc[0]['ma250'] and
-            data_front.iloc[-1]['close'] > data_front.iloc[-1]['ma250']):
+    if (
+        data_front.iloc[0]['close'] >= data_front.iloc[0]['ma250']
+        or data_front.iloc[-1]['close'] <= data_front.iloc[-1]['ma250']
+    ):
         return False
 
     if not data_end.empty:
@@ -79,7 +80,7 @@ def check(code_name, data, end_date=None, threshold=60):
     vol_ratio = highest_row['volume']/recent_lowest_row['volume']
     back_ratio = recent_lowest_row['close'] / highest_row['close']
 
-    if not (vol_ratio > 2 and back_ratio < 0.8) :
+    if vol_ratio <= 2 or back_ratio >= 0.8:
         return False
 
     push.strategy("{0} 回撤幅度: {1}".format(code_name, 1 - back_ratio))

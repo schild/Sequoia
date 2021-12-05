@@ -28,11 +28,8 @@ def check_breakthrough(code_name, data, end_date=None, threshold=30):
         if row['close'] > max_price:
             max_price = float(row['close'])
 
-    if last_close > max_price > second_last_close and max_price > last_open \
-            and last_close / last_open > 1.06:
-        return True
-    else:
-        return False
+    return last_close > max_price > second_last_close and max_price > last_open \
+            and last_close / last_open > 1.06
 
 
 # 收盘价高于N日均线
@@ -45,29 +42,22 @@ def check_ma(code_name, data, end_date=None, ma_days=250):
     data[ma_tag] = pd.Series(tl.MA(data['close'].values, ma_days), index=data.index.values)
 
     begin_date = data.iloc[0].date
-    if end_date is not None:
-        if end_date < begin_date:  # 该股票在end_date时还未上市
-            logging.debug("{}在{}时还未上市".format(code_name, end_date))
-            return False
+    if end_date is not None and end_date < begin_date:  # 该股票在end_date时还未上市
+        logging.debug("{}在{}时还未上市".format(code_name, end_date))
+        return False
     if end_date is not None:
         mask = (data['date'] <= end_date)
         data = data.loc[mask]
 
     last_close = data.iloc[-1]['close']
     last_ma = data.iloc[-1][ma_tag]
-    if last_close > last_ma:
-        return True
-    else:
-        return False
+    return last_close > last_ma
 
 
 # 上市日小于60天
 def check_new(code_name, data, end_date=None, threshold=60):
     size = len(data.index)
-    if size < threshold:
-        return True
-    else:
-        return False
+    return size < threshold
 
 
 # 量比大于2
